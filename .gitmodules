@@ -1,0 +1,3 @@
+[submodule "pyplasma"]
+	path = pyplasma
+	url = https://github.com/ToraNova/pyplasma
