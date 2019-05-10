@@ -8,7 +8,7 @@ fi
 
 if [ -z $1 ]
 then
-        #export LD_PRELOAD="$MKLROOT/lib/intel64/libmkl_avx2.so $MKLROOT/lib/intel64/libmkl_def.so"
+	# Intel bug mitigation
 	export LD_PRELOAD="$MKLROOT/lib/intel64/libmkl_core.so $MKLROOT/lib/intel64/libmkl_sequential.so"
         echo LD_PRELOADS:
         echo $LD_PRELOAD
