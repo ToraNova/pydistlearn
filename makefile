@@ -17,4 +17,6 @@ submod: $(gsub)
 $(gsub):
 	git submodule init
 
-	
+.phony: clean
+clean:
+	rm -rf pyplasma	
