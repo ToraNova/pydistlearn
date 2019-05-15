@@ -12,12 +12,12 @@ class NegForm:
     # one can use json dumps to serialize this
     # send it over a socket and recreate a negform
     # on the other end using the copy constructor
-    negform_primary = {
-            "esize":None,   # entity/entries   size
-            "fsize":None,   # feature/target   size
-            "bsize":None,   # batch/splitting  size
+    primary = {
+            "esize":-1,   # entity/entries   size
+            "fsize":-1,   # feature/target   size
+            "bsize":-1,   # batch/splitting  size
             "dflag":False,  # dflag check if it has the target
-            "rrlambda":None # rrlambda is the ridge regression's hyperparam
+            "rrlambda":-1 # rrlambda is the ridge regression's hyperparam
             }
 
     def __init__(self, constr_param=None):
@@ -28,20 +28,21 @@ class NegForm:
             # this is the central
             pass
 
-        elif( type(negform_primary) == dict ):
+        elif( type(constr_param) == dict ):
             # copy constructor
-            negform_primary = constr_param
+            primary = constr_param
 
         else:
             # initializes the negform
-            self.primary['esize'] = constr_param.__mDmat.shape[0]
-            self.primary['fsize'] = constr_param.__mDmat.shape[1]
+            sz = constr_param.sizeof_internals()
+            self.primary['esize'] = sz.get('data')[0]
+            self.primary['fsize'] = sz.get('data')[1]
             self.primary['dflag'] = constr_param.hasTarget 
 
     dsform = '''es/fs/bs : (%d/%d/%d) [df?:%s]\nrrlambda : %.2f'''
-    def display():
+    def display(self):
         '''displays the content of the negform'''
-        print(dsform % (
+        print(self.dsform % (
             self.primary["esize"],
             self.primary["fsize"],
             self.primary["bsize"],

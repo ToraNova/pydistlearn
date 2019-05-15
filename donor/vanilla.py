@@ -4,13 +4,17 @@
 # and performs the most basic operations (generic)
 
 from . import ConceptDonor
-import csv
+import csv, json
 import numpy
+import socket
+import traceback
 
 # local
 import preproc.negotiate as negotiate
 import preproc.controller as controller
 NegForm = negotiate.NegForm
+
+import pyioneer.network.tcp.smsg as smsg
 
 class VanillaDonor(ConceptDonor):
         
@@ -19,11 +23,11 @@ class VanillaDonor(ConceptDonor):
     compd = numpy.double
 
     def __init__(self,filename,ahasTarget, htype, skipc = 0, adelimiter=';', aquotechar ='"',
-            verbose=False, debug=False):
+            verbose=False, debug=False,owarn=False):
         super().__init__(verbose=verbose,debug=debug)
         '''creates the vanilla donor by reading in a file, filles the file
         up and will read based on what the donor is created as (hasTarget or no?)'''
-        self._npdc = controller.NPDController(verbose,debug) 
+        self._npdc = controller.NPDController(verbose,debug,owarn) 
         self.hasTarget = ahasTarget
         self._npdc.read( filename, ahasTarget, htype, skipc = skipc, adelimiter = adelimiter,
                 aquotechar = aquotechar)
@@ -53,16 +57,25 @@ class VanillaDonor(ConceptDonor):
         central about the number of entries/features, it is expected that _mDmat is read
         from a file/stdin before this 
         @params ahostaddr - a tuple ('localhost',portnumber i.e 8000)'''
-        _mnegform = Negform(self) #creates the negotiation form
+        _mnegform = NegForm(self) #creates the negotiation form
         self.verbose("Negform created. Beginning Negotation...")
         _mnegform.display()
         try:
             negstr = json.dumps(_mnegform.primary) #obtains the primary neg data
-            _msocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #creates the sock obj
-            _msocket.connect( ahostaddr ) #attempting to connect to the host (central)
-            debug("Host connected. Sending negstr over (%s)" % negstr)
+            self._msocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self._msocket.connect( ahostaddr ) #attempting to connect to the host (central)
+            self.debug("Host connected. Sending negstr over (%s)" % negstr)
+            self.debug("NEGSTR type",type(negstr))
+            smsg.send( self._msocket, negstr )
+            self.debug("Negotiation form sent to central. Awaiting synchronization")
 
         except Exception as e:
-            self.error("Exception has occurred.",str(e))
+            self.expt(str(e),traceback.format_exc())
+
+    def shutdown_connections(self):
+        try:
+            self._msocket.close()
+        except Exception as e:
+            self.expt(str(e))
 
 

@@ -8,7 +8,7 @@
 # purposes
 
 import pyplasma.pyplasma as pyplasma
-from aux import read_csvfile
+from preproc.aux import read_csvfile
 import numpy
 
 if __name__ == "__main__":
@@ -31,11 +31,11 @@ if __name__ == "__main__":
     print("yvct dim (x,y) : ", y_vct.shape)
     # perform some conversion
 
-    alpha = xrowsz * ydimsz
-    pyplasma.ridge_solve( 
+    alpha = pyplasma.ridge_solve( 
             x_mat.flatten(), xrowsz, xcolsz,
             y_vct.flatten(), yelmsz, ydimsz,
             lval, 0,
-            alpha
+            xrowsz * ydimsz
             )
+    print(alpha)
             

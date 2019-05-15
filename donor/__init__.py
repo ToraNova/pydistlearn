@@ -9,23 +9,21 @@
 
 # default
 from abc import ABC, abstractmethod
-import json # used to aid serialization (not using cpickle due to possible exploits
 
 # sklearn
 from sklearn import preprocessing
 # pyioneer (external library)
 from pyioneer.support import Pam
-from pyioneer.support import lstools
 
 class ConceptDonor(Pam):
 
     _npdc_distkey = "__mdist_alpha"
     _mnegform = None
-    _npdc = None
+    _npdc = None # This should be a data controller
 
     hasTarget = False
 
-    def __init__(self,verbose=False,debug=False):
+    def __init__(self,verbose=False,debug=False,owarn=False):
         super().__init__(verbose=verbose,debug=debug)
 
     # required implementations (the constructor must read in to fill up _mDmat, and
@@ -58,11 +56,35 @@ class ConceptDonor(Pam):
         #TODO: figure out how to implement this
         pass
 
+    ##############################################################################################
+    # These are common throughout almost all implementation and thus are implemented in the ABC
+    ##############################################################################################
     def display_internals(self):
+        '''invokes a display command to display the internal content using any data controllers'''
         if self._npdc != None:
-            self._npdc.display()
+            self._npdc.show()
         if self._mnegform != None:
             self._mnegform.display()
+
+    def partition_internals(self, s_point):
+        '''invokes a partition command to perform splitting of the data set into the train/test'''
+        if self._npdc != None:
+            self._npdc.batch(s_point)
+        else:
+            self.error("Failed to partition. NPDC is null!")
+
+    def normalize_internals(self):
+        '''perform normalization on the internal dataset, please call partition again'''
+        if self._npdc != None:
+            self._npdc.stdnorm()
+        else:
+            self.error("Failed to normalize. NPDC is null!")
+
+    def sizeof_internals(self):
+        if self._npdc != None:
+            return self._npdc.size()
+        else:
+            self.error("Failed to obtain sizes. NPDC is null!")
 
     def isTrained(self):
         '''check if the donor is trained properly. (donor must negotatie before training)'''
