@@ -118,17 +118,28 @@ class NPDController(HomoCSVDataController):
             # batches up the dname
             self._mp[ dname+self._typevar0+self._batchvar0 ],\
             self._mp[ dname+self._typevar0+self._batchvar1 ] = \
-                dm.hsplit_mat( self._mp[ dname+self._typevar0 ], s_point)
+                dm.hsplit_mat( self._mp[ dname+self._typevar0 ], -s_point)
             if( self.hasTarget ):
                 self._mp[ dname+self._typevar1+self._batchvar0 ],\
                 self._mp[ dname+self._typevar1+self._batchvar1 ] = \
-                    dm.hsplit_mat( self._mp[ dname+self._typevar1 ], s_point)
+                    dm.hsplit_mat( self._mp[ dname+self._typevar1 ], -s_point)
 
-    def isBatched(self,dname):
+    def computeKernel(self, dname = _default_readkey, colmaj=False):
+        if(colmaj):
+            #col major ( XtX )
+            out = self.get( dname, 'data','train').transpose().dot(
+                    self.get( dname,'data','train'))
+        else:
+            #row major ( XXt )
+            out = self.get( dname, 'data','train').dot(
+                    self.get( dname,'data','train').transpose())
+        return out
+
+    def isBatched(self,dname = _default_readkey):
         '''attempts to test if the dset is batched or not'''
         return self.isLoaded( dname+self._typevar0 + self._batchvar0 )
 
-    def get(self, dname, side='', batch=''):
+    def get(self, dname = _default_readkey, side='', batch=''):
         '''overrides the ancestral base class to obtains the data from the dictionary
         @dname- name of the data,
         @side - if it is the data, or target. use _typevar0 or _typevar1 to specify
@@ -139,10 +150,13 @@ class NPDController(HomoCSVDataController):
             side = self._typevar0
         elif(side == "target"):
             side = self._typevar1
-        if(batch == "test"):
-            side = self._batchvar0
-        elif(batch == "train"):
-            side = self._batchvar1
+        if(batch == "train"):
+            batch = self._batchvar0
+        elif(batch == "test"):
+            batch = self._batchvar1
+        self.debug("npdc GET",dname+side+batch)
+        if( not self.isLoaded( dname+side+batch) ):
+            self.warn("Unloaded :",dname+side+batch)
         return super().get( dname+side+batch )
 
 

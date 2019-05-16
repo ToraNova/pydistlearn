@@ -7,6 +7,7 @@ from preproc import read_csvfile
 from donor.vanilla import VanillaDonor
 import numpy
 import argparse
+import pyioneer.support.gpam as gpam
 
 if __name__ == "__main__":
 
@@ -18,10 +19,18 @@ if __name__ == "__main__":
     mp.add_argument("-t","--hasTarget",action='store_true',default=False,help="Specify if the client has targets or not")
     args = mp.parse_args() #preliminary parsing to see if it is client or not
 
+    gpam.disable() #disable some verboses
+
     #client 
     donor = VanillaDonor( args.datafile, args.hasTarget , float, debug=True, verbose=True,owarn=True)
     donor.normalize_internals()
     donor.display_internals()
     donor.negotiate( (args.hostname, args.port) )
+    donor.display_internals()
+
+    donor.conntrain()
+    donor.conntest()
+
+    donor.shutdown_connections()
 
 

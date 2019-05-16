@@ -17,11 +17,13 @@ from pyioneer.support import Pam
 
 class ConceptDonor(Pam):
 
-    _npdc_distkey = "__mdist_alpha"
+    _mdistalpha = None
     _mnegform = None
     _npdc = None # This should be a data controller
 
     hasTarget = False
+    hasAlpha = False
+    kernel = None
 
     def __init__(self,verbose=False,debug=False,owarn=False):
         super().__init__(verbose=verbose,debug=debug)
@@ -54,6 +56,11 @@ class ConceptDonor(Pam):
     @abstractmethod
     def connpred(self):
         #TODO: figure out how to implement this
+        pass
+
+    @abstractmethod
+    def recover_weights(self, colmajor=False):
+        '''please implement a weight recovery function. vanilla uses numpy'''
         pass
 
     ##############################################################################################
@@ -90,10 +97,8 @@ class ConceptDonor(Pam):
         '''check if the donor is trained properly. (donor must negotatie before training)'''
         return self._npdc != None and self._npdc.isLoaded( self._npdc_distkey )
 
-    def hasNegotatiated(self):
+
+    def hasNegotiated(self):
         '''check if the donor has negotiated. this is the first round of comm. that
         the donor and the central must undergo before training/testing phase'''
-        return _mnegform != None \
-            and _mnegform.primary.get("bsize") != None \
-            and _mnegform.primary.get("rrlambda") != None
-
+        return (self._mnegform.isfilled()) and (type(self.kernel) != None)

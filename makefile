@@ -9,6 +9,11 @@ gsub := pyplasma
 .phony: all
 all: submod 
 
+.phony: debug
+debug: $(gsub)
+	git submodule update --remote $<
+	cd $< && $(MAKE) debug
+
 .phony: submod
 submod: $(gsub)
 	git submodule update --remote $<

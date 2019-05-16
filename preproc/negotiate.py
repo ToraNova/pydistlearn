@@ -6,6 +6,7 @@
 
 # This class act as a message packet which can be pickled and unpickled
 # to allow sending through sockets
+import pyioneer.support.gpam as gpam
 class NegForm:
 
     # this is the primary data for the form
@@ -26,18 +27,28 @@ class NegForm:
         central'''
         if(constr_param == None):
             # this is the central
+            gpam.debug("Negform -- central constructor")
             pass
 
         elif( type(constr_param) == dict ):
             # copy constructor
-            primary = constr_param
+            gpam.debug("Negform -- copy constructor",constr_param)
+            self.primary = constr_param
 
         else:
             # initializes the negform
+            gpam.debug("Negform -- donor constructor")
             sz = constr_param.sizeof_internals()
             self.primary['esize'] = sz.get('data')[0]
             self.primary['fsize'] = sz.get('data')[1]
             self.primary['dflag'] = constr_param.hasTarget 
+
+    def isfilled(self):
+        '''returns true if the negform is considered to be synced'''
+        if( self.primary['bsize'] != -1 and self.primary['rrlambda'] != -1):
+            return True
+        else:
+            return False
 
     dsform = '''es/fs/bs : (%d/%d/%d) [df?:%s]\nrrlambda : %.2f'''
     def display(self):

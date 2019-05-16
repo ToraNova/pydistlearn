@@ -2,10 +2,44 @@
 # This file is meant for lookup tables for categorical value quantisation.
 import csv, numpy
 
+import pyioneer.support.gpam as gpam
+# This function is used to decide on the batches
+def evaluate_bsize( esize, bfactor ):
+    if(bfactor > esize):
+        # bad user again
+        gpam.warn("Bad user. bfactor > esize!")
+        return int( esize )
+    if(bfactor > 1):
+        # this uses bfactor as a literal numeric
+        return int( bfactor )
+    elif(bfactor > 0):
+        # this uses bfactor as a proportion to esize
+        return int( esize * bfactor )
+    else:
+        # this means the user has made a mistake.
+        gpam.warn("Bad user. bfactor < 0")
+        return int(-bfactor)
+
+def find_minesz( negformlist ):
+    '''finds the minimum entry size amongst the lists to
+    allow batching nicely without errors'''
+    try:
+        mincand = negformlist[0].primary.get('esize')
+        for f in negformlist:
+            if( f.primary.get('esize') < mincand ):
+                mincand = f.primary.get('esize')
+        gpam.debug("minimum candidate is",mincand)
+        return mincand
+    except Exception as e:
+        gpam.expt(str(e))
+
+
+
 # This function is used to read
 def read_csvfile(filename,compd=numpy.double,limiter=0,skips=0):
     # dataset preparation
     with open(filename) as dataset:
+
         reader = csv.reader(dataset,delimiter=';', quotechar='"')
         for index in range(skips):
             next(reader)

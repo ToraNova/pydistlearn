@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     lval = 1.0 #lambda
 
-    csvfile = '/home/cjason/library/guides/python/pysample/datagen/data0.csv'
+    csvfile = '/home/cjason/library/guides/python/pysample/datagen/xdc.csv'
     x_mat, y_vct, rowcount = read_csvfile(csvfile) 
     xrowsz = x_mat.shape[0]
     xcolsz = x_mat.shape[1]
@@ -31,11 +31,28 @@ if __name__ == "__main__":
     print("yvct dim (x,y) : ", y_vct.shape)
     # perform some conversion
 
+    # Kernel calculated in pyplasma
     alpha = pyplasma.ridge_solve( 
             x_mat.flatten(), xrowsz, xcolsz,
             y_vct.flatten(), yelmsz, ydimsz,
             lval, 0,
             xrowsz * ydimsz
             )
-    print(alpha)
+
+    # Kernel calculated outside of pyplasma
+    kernel = x_mat.dot( x_mat.transpose())
+    kalpha = pyplasma.ridge_solve( 
+            kernel.flatten(), xrowsz, xcolsz,
+            y_vct.flatten(), yelmsz, ydimsz,
+            lval, 1,
+            xrowsz * ydimsz
+            )
+
+    weight = (1/lval)*x_mat.transpose().dot( kalpha )
+    weight2 = (1/lval)*x_mat.transpose().dot( alpha)
+    print(weight)
+    print(weight2)
+    print("Equal?")
+    print( numpy.allclose( kalpha, alpha, rtol=1e-5, atol=1e-5))
+
             

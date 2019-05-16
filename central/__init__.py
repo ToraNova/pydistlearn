@@ -14,8 +14,10 @@ from pyioneer.support import Pam
 class ConceptCentral(Pam):
 
     _hostnum = None
-    _mnegformlist = None            # list of negforms recovered from the negotiations
-    _mdmlconnlist = None            # list of connections accepted during DML
+    _mnegformlist = []            # list of negforms recovered from the negotiations
+    _mdmlconnlist = []            # list of connections accepted during DML
+    _mdmlklist = []
+    _mdmltlist = []
     _npdc = None # This should be a data controller
 
     def __init__(self,verbose=False,debug=False):
@@ -39,7 +41,7 @@ class ConceptCentral(Pam):
         pass
 
     @abstractmethod
-    def host_negotiations(self,ahostaddr):
+    def host_negotiations(self,asrvaddr, batchfactor=0.1, rrlambda=1.0):
         '''begins negotiations by listening on ahostaddr. receives the negform and syncs
         them up with the donors
         @params ahostaddr - a tuple ('localhost',portnumber i.e 8000)'''
@@ -53,17 +55,9 @@ class ConceptCentral(Pam):
     ##############################################################################################
     # These are common throughout almost all implementation and thus are implemented in the ABC
     ##############################################################################################
-    def display_internals(self):
-        '''invokes a display command to display the internal content using any data controllers'''
-        if self._npdc != None:
-            self._npdc.show()
-        if self._mnegform != None:
-            self._mnegform.display()
 
-    def hasNegotatiated(self):
+    def hasNegotiated(self):
         '''check if the donor has negotiated. this is the first round of comm. that
         the donor and the central must undergo before training/testing phase'''
-        return _mnegform != None \
-            and _mnegform.primary.get("bsize") != None \
-            and _mnegform.primary.get("rrlambda") != None
+        return len(self._mnegformlist) > 0 and len(self._mdmlconnlist) > 0
 
