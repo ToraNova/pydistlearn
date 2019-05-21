@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     lval = 1.0 #lambda
 
-    csvfile = '/home/cjason/library/guides/python/pysample/datagen/xdc.csv'
+    csvfile = 'sample_dsets/xdc.csv'
     x_mat, y_vct, rowcount = read_csvfile(csvfile) 
     xrowsz = x_mat.shape[0]
     xcolsz = x_mat.shape[1]

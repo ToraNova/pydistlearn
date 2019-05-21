@@ -1,15 +1,18 @@
 # pydistlearn
 
 ### A project to provide distributed machine learning
+Runs on PyPLASMA, a Python wrapped PLASMA library for linear regression
 
-### Uses pyplasma, a python wrapped PLASMA
 
 ### Dependencies:
-* numpy
-* prodtools
-* pyioneer
+* swig
+* python 3.6.7
 * Intel's math kernel library (MKL)
+* plasma-17.1 (ICL, already pre-included)
+* prodtools (custom library)
+* pyioneer (custom library)
 * CMAKE 3.14.x
+* numpy
 
 ### Math Kernel Library
 
@@ -23,7 +26,9 @@ Install pre-requisites
 
 	apt-get install swig
 	apt-get install python3-dev
-	apt-get install libopenblas-dev
+	apt-get install libopenblas-dev liblapacke-dev liblapack-dev
+	apt-get install python3-pip
+	pip3 install numpy
 
 Compile the custom library prodtools and pyioneer
 
@@ -32,8 +37,7 @@ Compile the custom library prodtools and pyioneer
 
 Clone this repository and initialize pyplasma's repo
 
-	git clone https://github.com/ToraNova/pydistlearn
-	cd pydistlearn && git submodule init
+	git clone https://github.com/toranova/pydistlearn && cd pydistlearn && git submodule init
 
 Edit the preset_env file to point to the roots for MKL (use your favourite editor), afterwhich, 
 source the preset_env.sh file to your environment.
@@ -53,10 +57,17 @@ PLASMA tests are available on this file : [plasma_test.py](plasma_test.py)
 
 	python3 plasma_test.py
 
+or simply
+
+	make test
+
 expect true on last line
 
 ### Examples
 Examples are found with [donor_test.py](donor_test.py) and [central_test.py](central_test.py)
+
+### Troubleshooting
+[see here](pyplasma/troubleshoot.md)
 
 ##### TODO: 
 * fix the readme

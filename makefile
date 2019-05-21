@@ -5,24 +5,31 @@
 # submodules list
 gsub := pyplasma
 
+PYTHV ?= python3.6
+
 #default build target
-.phony: all $(gsub)
+.phony: all
 all: submod 
 
 .phony: debug
 debug: $(gsub)
 	git submodule update --remote $<
-	cd $< && $(MAKE) debug
+	cd $< && $(MAKE) PYTHV=$(PYTHV) -C debug
 
 .phony: submod
 submod: $(gsub)
 	git submodule update --remote $<
-	cd $< && $(MAKE)
+	cd $< && $(MAKE) PYTHV=$(PYTHV)
 
 $(gsub):
 	git submodule init
 
-.phony: clean
+.phony: clean distclean test
 clean: $(gsub)
-	rm -rf pyplasma	
 	cd $(gsub) && $(MAKE) clean
+
+distclean: $(gsub)
+	rm -rf pyplasma	
+
+test:
+	python3 plasma_test.py
