@@ -4,7 +4,7 @@
 # project pyplasma - ToraNova 2019
 export MKLROOT=/opt/intel/mkl
 export PRTROOT=/home/cjason/library/prodtools
-export PLSROOT=/home/cjason/github/plasma-17.1
+export PLSROOT=$(pwd)/pyplasma/plasma-17.1
 LD_LIBRARY_PATH=$PRTROOT/lib
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$MKLROOT/lib/intel64
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$(pwd)/pyplasma
