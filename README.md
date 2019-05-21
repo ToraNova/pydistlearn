@@ -23,6 +23,7 @@ Install pre-requisites
 
 	apt-get install swig
 	apt-get install python3-dev
+	apt-get install libopenblas-dev
 
 Compile the custom library prodtools and pyioneer
 
