@@ -6,7 +6,7 @@
 gsub := pyplasma
 
 #default build target
-.phony: all
+.phony: all $(gsub)
 all: submod 
 
 .phony: debug
@@ -23,5 +23,6 @@ $(gsub):
 	git submodule init
 
 .phony: clean
-clean:
+clean: $(gsub)
 	rm -rf pyplasma	
+	cd $(gsub) && $(MAKE) clean

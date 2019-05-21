@@ -22,6 +22,7 @@ the user's home directory). The installation path is essential as we need to lin
 Install pre-requisites
 
 	apt-get install swig
+	apt-get install python3-dev
 
 Compile the custom library prodtools and pyioneer
 
