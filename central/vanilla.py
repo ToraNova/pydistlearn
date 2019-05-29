@@ -5,7 +5,7 @@
 
 from . import ConceptCentral
 import csv, json
-import numpy
+import numpy, pandas
 import socket, select
 from io import StringIO
 import traceback
@@ -20,6 +20,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 import preproc.negotiate as negotiate
 import preproc.controller as controller
 import preproc.aux as aux
+NPDController = controller.NPDController
 NegForm = negotiate.NegForm
 
 import pyioneer.network.tcp.smsg as smsg
@@ -60,7 +61,8 @@ class VanillaCentral(ConceptCentral):
                     self.error("kernel rcv has failed from donor",i)
                     out = False
                 else:
-                    rk = numpy.array(json.loads( rcv ))
+                    rk = NPDController.deserialize( rcv )
+                    #rk = numpy.array(json.loads( rcv ))
                     self.verbose("kernel rcv has succeeded from donor",i)
                     self._mdmlklist.append( rk )
                 # sends the ACK
@@ -72,7 +74,8 @@ class VanillaCentral(ConceptCentral):
                         self.error("train targets rcv has failed from donor",i)
                         out = False
                     else:
-                        rt = numpy.array(json.loads( rcv ))
+                        rt = NPDController.deserialize( rcv )
+                        #rt = numpy.array(json.loads( rcv ))
                         self._mdmltlist.append( rt )
 
             if( len(self._mdmlklist) < 1 or len(self._mdmltlist) < 1 ):
@@ -93,7 +96,7 @@ class VanillaCentral(ConceptCentral):
                 
                 # only train against the first TODO : selectable training
                 targ = self._mdmltlist[0]
-                
+                self.verbose("Starting Ridge Solver") 
                 alpha = pyplasma.ridge_solve(
                         ksum.flatten(), ksum.shape[0], ksum.shape[1],
                         targ.flatten(), targ.shape[0], targ.shape[1],
@@ -101,9 +104,10 @@ class VanillaCentral(ConceptCentral):
                         ksum.shape[0]*targ.shape[1])
                 self.info("Alpha meta:",type(alpha),alpha.shape)
 
+                dumped = NPDController.serialize( alpha )
                 for i in range( self._hostnum ):
                     conn = self._mdmlconnlist[i]
-                    smsg.send( conn, json.dumps( alpha.tolist() ) ) #json dump and send the array
+                    smsg.send( conn, dumped ) #dump to bytes and send
                 self.info("DML training complete")
         self.donorTrained = out
         return out
@@ -125,7 +129,8 @@ class VanillaCentral(ConceptCentral):
                     self.error("aggregate rcv has failed from donor",i)
                     out = False #Error occurred
                 else:
-                    ra = numpy.array( json.loads(rcv))
+                    ra = NPDController.deserialize( rcv )
+                    #ra = numpy.array( json.loads(rcv))
                     self._mdmlalist.append( ra )
                 conn.send('ACKN'.encode('utf-8'))
                 if( self._mnegformlist[i].primary['dflag']):
@@ -134,7 +139,8 @@ class VanillaCentral(ConceptCentral):
                         self.error("test targets rcv has failed from donor",i)
                         out = False #Error occurred
                     else:
-                        rt = numpy.array(json.loads(rcv))
+                        rt = NPDController.deserialize( rcv )
+                        #rt = numpy.array(json.loads(rcv))
                         self._mdmlvlist.append( rt )
                         self.verbose("received test targets from donor",i)
 

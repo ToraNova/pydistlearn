@@ -28,17 +28,14 @@ class NegForm:
         pam = gpam.getgpam()
         if(constr_param == None):
             # this is the central
-            pam.debug("Negform -- central constructor")
             pass
 
         elif( type(constr_param) == dict ):
             # copy constructor
-            pam.debug("Negform -- copy constructor",constr_param)
             self.primary = constr_param
 
         else:
             # initializes the negform
-            pam.debug("Negform -- donor constructor")
             sz = constr_param.sizeof_internals()
             self.primary['esize'] = sz.get('data')[0]
             self.primary['fsize'] = sz.get('data')[1]

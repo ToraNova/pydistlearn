@@ -3,7 +3,7 @@
 import csv, numpy, pandas
 from sklearn_pandas import DataFrameMapper
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from preproc.rewrite import CSVrewriter
+from preproc.neoctl import NeoNPDController
 import argparse, json
 
 if __name__ == "__main__":
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     ap.add_argument("--coldisp","-c",type=str, help="Display a certain column")
 
     args = ap.parse_args()
-    mc = CSVrewriter( args.datafile ,verbose=True,debug=True)
+    mc = NeoNPDController( args.datafile ,verbose=True,debug=True)
     if( args.showcase ):
         mc.head()
         print()

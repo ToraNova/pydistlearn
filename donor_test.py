@@ -17,12 +17,14 @@ if __name__ == "__main__":
     mp.add_argument("-a","--hostname", type=str, help="Hostname of the central (i.e localhost)", default="localhost")
     mp.add_argument("-p","--port",type=int, help="Port number (default 48960)",default=48960)
     mp.add_argument("-t","--hasTarget",action='store_true',default=False,help="Specify if the client has targets or not")
+    mp.add_argument("-o","--normalize",action='store_true',default=False,help="Perform internal normalization?")
     args = mp.parse_args() #preliminary parsing to see if it is client or not
 
     #client 
     donor = VanillaDonor( args.datafile, args.hasTarget , float, skipc=1 , adelimiter=',',
             debug=True, verbose=True,owarn=True)
-    donor.normalize_internals()
+    if(args.normalize):
+        donor.normalize_internals()
     donor.display_internals()
     donor.negotiate( (args.hostname, args.port) )
     donor.display_internals()

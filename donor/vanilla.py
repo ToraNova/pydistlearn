@@ -5,8 +5,9 @@
 
 from . import ConceptDonor
 import csv, json
-import numpy
+import numpy, pandas
 import socket
+import traceback
 from io import StringIO
 import traceback
 
@@ -16,6 +17,7 @@ from sklearn import preprocessing
 # local
 import preproc.negotiate as negotiate
 import preproc.controller as controller
+NPDController = controller.NPDController
 NegForm = negotiate.NegForm
 
 import pyioneer.network.tcp.smsg as smsg
@@ -31,7 +33,7 @@ class VanillaDonor(ConceptDonor):
         super().__init__(verbose=verbose,debug=debug)
         '''creates the vanilla donor by reading in a file, filles the file
         up and will read based on what the donor is created as (hasTarget or no?)'''
-        self._npdc = controller.NPDController(verbose,debug,owarn) 
+        self._npdc = NPDController(verbose,debug,owarn) 
         self.hasTarget = ahasTarget
         self._npdc.read( filename, ahasTarget,htype, skipc = skipc, adelimiter = adelimiter,
                 aquotechar = aquotechar)
@@ -45,27 +47,31 @@ class VanillaDonor(ConceptDonor):
         from server and fill in the received alpha to _mdist_alpha'''
         if( self.hasNegotiated() ):
             self.verbose("Sending kernel to central")
-            dumped = json.dumps( self.kernel.tolist() ) # THIS line is crashing the system (for size 10k)
-            self.verbose("Total json dump: {} bytes".format(len(dumped)))
+            #dumped = json.dumps( self.kernel.tolist() ) # THIS line is crashing the system (for size 10k)
+
+            dumped = NPDController.serialize( self.kernel )
+            self.verbose("Total serial dump: {} bytes".format(len(dumped)))
             smsg.send( self._msocket, dumped ) #json dump and send the array
             # await confirmation
             repmsg = self._msocket.recv(4)
             if( repmsg.decode('utf-8') == "ACKN" ):
                 # proceed
                 if( self.hasTarget ):
-                    smsg.send( self._msocket, json.dumps( \
-                            self._npdc.get(side='target',batch='train').tolist(),\
-                             )) #json dump and send the array
+                    # dump the target_train to bytes and send it on over socket
+                    dumped = NPDController.serialize( self._npdc.get(side='target',batch='train'))
+                    smsg.send( self._msocket, dumped) 
                 # await for alpha
                 self.info("All Kernels sent. Awaiting central response.")
 
                 rcv = smsg.recv( self._msocket )
                 if(rcv != None):
-                    if( rcv.decode('utf-8') == 'ABRT'):
-                        self.error("Abort request by central.")
-                        self.hasAlpha = False
-                    else:
-                        self._mdistalpha = numpy.array(json.loads( rcv ))
+                    try:
+                        if( rcv.decode('utf-8') == 'ABRT'):
+                            self.error("Abort request by central.")
+                            self.hasAlpha = False
+                    except UnicodeDecodeError :
+                        self.verbose("Unicode decode failed. Proceeding with deserialization")
+                        self._mdistalpha = NPDController.deserialize(rcv)
                         self.info("Distributed alpha received.")
                         self.hasAlpha=True
                         self.recover_weights() # perform weight recovery
@@ -91,14 +97,15 @@ class VanillaDonor(ConceptDonor):
             aggregate = self._npdc.get( side="data",batch="test").dot( self._mweights )
             self.verbose("Sending test prediction to central",aggregate.shape)
             #self.raw( aggregate )
-            smsg.send( self._msocket, json.dumps( aggregate.tolist() ) )
+            dumped = NPDController.serialize( aggregate )
+            smsg.send( self._msocket, dumped )
             repmsg = self._msocket.recv(4)
             if( repmsg.decode('utf-8') == "ACKN" ):
                 #proceed
                 if( self.hasTarget ):
-                    smsg.send( self._msocket, json.dumps(\
-                            self._npdc.get(side='target',batch='test').tolist(),\
-                            ))
+                    # dump the target_test to bytes and send it on over socket
+                    dumped = NPDController.serialize( self._npdc.get(side='target',batch='test'))
+                    smsg.send( self._msocket, dumped )
                     #await for test results
                     self.info("All Aggregates sent. Awaiting results.") 
 
@@ -177,7 +184,6 @@ class VanillaDonor(ConceptDonor):
             self.expt(str(e),traceback.format_exc())
         finally:
             return self.hasNegotiated()
-
 
     def shutdown_connections(self):
         try:

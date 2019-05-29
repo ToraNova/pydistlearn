@@ -39,15 +39,6 @@
 			]
 		},
 		{
-			"__list__scaler":[
-				{ 
-				"process":"preproc",
-				"mets":"standardscaler",
-				"arglist":[]
-				}
-			]
-		},
-		{
 			"Total Costs":[
 				{
 				"process":"moveback",

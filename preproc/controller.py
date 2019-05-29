@@ -2,10 +2,12 @@
 # to reduce code sizes on the central/donor class
 # definition and improve maintainability
 
+from . import dist_matrix as dm
 from pyioneer.variable.control import HomoCSVController
 from sklearn import preprocessing
 import numpy
-from . import dist_matrix as dm
+from io import BytesIO,StringIO
+import json
 
 class NPDController(HomoCSVController):
     '''inhertis from the HomoCSVDataController class. deals with homogeneous data (naive)'''
@@ -48,6 +50,19 @@ class NPDController(HomoCSVController):
             except Exception as e:
                 self.expt(str(e))
                 super().unload( dname )
+
+    @staticmethod
+    def serialize(target):
+        '''serialize the numpy array to allow sending over sockets'''
+        with BytesIO() as b:
+            numpy.save(b, target)
+            serial = b.getvalue()
+        return serial
+
+    @staticmethod
+    def deserialize(target):
+        '''deserialize the data to recreate the numpy array'''
+        return numpy.load(BytesIO(target))
 
     def size(self, dname = _default_readkey):
         '''obtains the size of dname and it's batched data, returns a dictionary of sizes'''
@@ -106,6 +121,7 @@ class NPDController(HomoCSVController):
 
     def stdnorm(self, dname = _default_readkey):
         '''performs standard normalization on the data i.e, mean = 0 std = 1'''
+        self.info("Normalizing",dname)
         if( self.isRead(dname)) :
             self.load( dname+self._typevar0,\
                     preprocessing.scale( super().get( dname+self._typevar0 ) ))
@@ -127,6 +143,7 @@ class NPDController(HomoCSVController):
                     dm.hsplit_mat( self._mp[ dname+self._typevar1 ], -s_point)
 
     def computeKernel(self, dname = _default_readkey, colmaj=False):
+        '''computes the kernel of the data. returns a NUMPY ARRAY!'''
         if(colmaj):
             #col major ( XtX )
             out = self.get( dname, 'data','train').transpose().dot(

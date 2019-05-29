@@ -19,7 +19,7 @@ class ConceptDonor(Pam):
 
     _mdistalpha = None
     _mnegform = None
-    _npdc = None # This should be a data controller
+    _npdc = None # This should be a data controller DEPRECATED (now uses a dataframe)
 
     hasTarget = False
     hasAlpha = False
@@ -97,4 +97,6 @@ class ConceptDonor(Pam):
     def hasNegotiated(self):
         '''check if the donor has negotiated. this is the first round of comm. that
         the donor and the central must undergo before training/testing phase'''
+        if( self._mnegform is None ):
+            return False
         return (self._mnegform.isfilled()) and (type(self.kernel) is not None)
