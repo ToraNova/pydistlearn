@@ -17,6 +17,7 @@ from sklearn import preprocessing
 from sklearn.metrics import mean_squared_error, r2_score
 
 # local
+from preproc.aux import serialize, deserialize
 import preproc.negotiate as negotiate
 import preproc.controller as controller
 import preproc.aux as aux
@@ -61,7 +62,7 @@ class VanillaCentral(ConceptCentral):
                     self.error("kernel rcv has failed from donor",i)
                     out = False
                 else:
-                    rk = NPDController.deserialize( rcv )
+                    rk = deserialize( rcv )
                     #rk = numpy.array(json.loads( rcv ))
                     self.verbose("kernel rcv has succeeded from donor",i)
                     self._mdmlklist.append( rk )
@@ -74,11 +75,11 @@ class VanillaCentral(ConceptCentral):
                         self.error("train targets rcv has failed from donor",i)
                         out = False
                     else:
-                        rt = NPDController.deserialize( rcv )
+                        rt = deserialize( rcv )
                         #rt = numpy.array(json.loads( rcv ))
                         self._mdmltlist.append( rt )
 
-            if( len(self._mdmlklist) < 1 or len(self._mdmltlist) < 1 ):
+            if( len(self._mdmlklist) < 1):
                 self.error("No kernels received")
                 out = False
                 self.__abortAll()
@@ -97,14 +98,18 @@ class VanillaCentral(ConceptCentral):
                 # only train against the first TODO : selectable training
                 targ = self._mdmltlist[0]
                 self.verbose("Starting Ridge Solver") 
+                if( len(targ.shape) < 2 ):
+                    tdim = 1
+                else:
+                    tdim = targ.shape[1]
                 alpha = pyplasma.ridge_solve(
                         ksum.flatten(), ksum.shape[0], ksum.shape[1],
-                        targ.flatten(), targ.shape[0], targ.shape[1],
+                        targ.flatten(), targ.shape[0], tdim,
                         lval, 1,
-                        ksum.shape[0]*targ.shape[1])
+                        ksum.shape[0]*tdim)
                 self.info("Alpha meta:",type(alpha),alpha.shape)
 
-                dumped = NPDController.serialize( alpha )
+                dumped = serialize( alpha )
                 for i in range( self._hostnum ):
                     conn = self._mdmlconnlist[i]
                     smsg.send( conn, dumped ) #dump to bytes and send
@@ -129,7 +134,7 @@ class VanillaCentral(ConceptCentral):
                     self.error("aggregate rcv has failed from donor",i)
                     out = False #Error occurred
                 else:
-                    ra = NPDController.deserialize( rcv )
+                    ra = deserialize( rcv )
                     #ra = numpy.array( json.loads(rcv))
                     self._mdmlalist.append( ra )
                 conn.send('ACKN'.encode('utf-8'))
@@ -139,7 +144,7 @@ class VanillaCentral(ConceptCentral):
                         self.error("test targets rcv has failed from donor",i)
                         out = False #Error occurred
                     else:
-                        rt = NPDController.deserialize( rcv )
+                        rt = deserialize( rcv )
                         #rt = numpy.array(json.loads(rcv))
                         self._mdmlvlist.append( rt )
                         self.verbose("received test targets from donor",i)
@@ -159,6 +164,7 @@ class VanillaCentral(ConceptCentral):
                     asum = a + asum
 
                 # only test against the first TODO: selectable testing
+
                 varg = self._mdmlvlist[0]
                 jrep = {
                         "mse": mean_squared_error( asum, varg),

@@ -1,0 +1,14 @@
+{
+	"mainlist":[
+		{
+			"*": [
+				{ 	
+				"process":"preproc",
+				"mets":"standardscaler",
+				"arglist":[]
+				}
+			],
+			"__comment":["scale all columns to have mean = 0 and stddev of 1"]
+		}
+	]
+}

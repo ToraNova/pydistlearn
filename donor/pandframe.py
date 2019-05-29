@@ -1,7 +1,9 @@
-# vanilla.py (DONOR)
-# vanilla donor is the vanilla version of a donor
+# pandframe.py (DONOR)
+# pandframe donor is a donor version based on pandas
+# dataframe
 # that is, it uses unencrypted sockets, no SSL/TLS
-# and performs the most basic operations (generic)
+# but it features a richer set of data manipulation
+# functionalities
 
 from . import ConceptDonor
 import csv, json
@@ -15,41 +17,57 @@ import traceback
 from sklearn import preprocessing
 
 # local
+from preproc.aux import computeKernel
 from preproc.aux import serialize, deserialize
 import preproc.negotiate as negotiate
-import preproc.controller as controller
-NPDController = controller.NPDController
-NegForm = negotiate.NegForm
+import preproc.neoctl as neoctl
+NeoNPDController = neoctl.NeoNPDController
+NegForm = negotiate.NeoNegForm
 
 import pyioneer.network.tcp.smsg as smsg
 
-class VanillaDonor(ConceptDonor):
+class PandFrameDonor(ConceptDonor):
         
     # dimension of the target. for multivariate, this > 1
     tdim = 1
     compd = numpy.double
 
-    def __init__(self,filename,ahasTarget, htype, skipc = 0, adelimiter=';', aquotechar ='"',
+    def __init__(self, filename , preprocdir = None, ahasTarget = False, skipc = 0, adelimiter=';', aquotechar ='"',
             verbose=False, debug=False,owarn=False):
         super().__init__(verbose=verbose,debug=debug)
         '''creates the vanilla donor by reading in a file, filles the file
         up and will read based on what the donor is created as (hasTarget or no?)'''
-        self._npdc = NPDController(verbose,debug,owarn) 
+
+        self.verbose("Donorfile:",filename)
+        self._npdc = NeoNPDController( filename, 0, adelimiter,verbose,debug)
+        if( preprocdir is not None):
+            self.preprocess( preprocdir )
         self.hasTarget = ahasTarget
-        self._npdc.read( filename, ahasTarget,htype, skipc = skipc, adelimiter = adelimiter,
-                aquotechar = aquotechar)
 
     # required implementations (the constructor must read in to fill up _mDmat, and
     # possibly _mTvct if it hasTarget. the hasTarget must also be set to True if
     # the donor truly possess the targets
-    def conntrain(self):
+    def conntrain(self,targetname=None):
         '''conntrain should begin connection with the central, send in the
         _mDmat_train and (if it has the target) _mTvct_train. await response
         from server and fill in the received alpha to _mdist_alpha'''
         if( self.hasNegotiated() ):
+            self.hasTarget = targetname is not None
+
+            if(self.hasTarget):
+                self.train_x, self.test_x, self.train_y, self.test_y = \
+                        self._npdc.obtrain( self._mnegform.primary["bsize"] , targetname )
+            else:
+                self.train_x, self.test_x = self._npdc.obtrain( self._mnegform.primary["bsize"] )
+            self.kernel = computeKernel( self.train_x )
+            if not type(self.kernel) == numpy.ndarray:
+                self.warn("Kernel computational error!")
+            else:
+                self.verbose("Partitioned and computed the kernel",self.kernel.shape)
             self.verbose("Sending kernel to central")
             #dumped = json.dumps( self.kernel.tolist() ) # THIS line is crashing the system (for size 10k)
-
+            self.debug("Training headers :")
+            self.raw( self._npdc.hlist )
             dumped = serialize( self.kernel )
             self.verbose("Total serial dump: {} bytes".format(len(dumped)))
             smsg.send( self._msocket, dumped ) #json dump and send the array
@@ -59,7 +77,7 @@ class VanillaDonor(ConceptDonor):
                 # proceed
                 if( self.hasTarget ):
                     # dump the target_train to bytes and send it on over socket
-                    dumped = serialize( self._npdc.get(side='target',batch='train'))
+                    dumped = serialize( self.train_y )
                     smsg.send( self._msocket, dumped) 
                 # await for alpha
                 self.info("All Kernels sent. Awaiting central response.")
@@ -95,7 +113,7 @@ class VanillaDonor(ConceptDonor):
         from server which it will return the error rating of the model
         RETURNS True upon No errors. False otherwise'''
         if( self.isTrained ):
-            aggregate = self._npdc.get( side="data",batch="test").dot( self._mweights )
+            aggregate = self.test_x.dot( self._mweights )
             self.verbose("Sending test prediction to central",aggregate.shape)
             #self.raw( aggregate )
             dumped = serialize( aggregate )
@@ -105,7 +123,7 @@ class VanillaDonor(ConceptDonor):
                 #proceed
                 if( self.hasTarget ):
                     # dump the target_test to bytes and send it on over socket
-                    dumped = serialize( self._npdc.get(side='target',batch='test'))
+                    dumped = serialize( self.test_y )
                     smsg.send( self._msocket, dumped )
                     #await for test results
                     self.info("All Aggregates sent. Awaiting results.") 
@@ -134,18 +152,16 @@ class VanillaDonor(ConceptDonor):
 
     def recover_weights(self, colmajor=False):
         '''recovers the weight'''
-        if( self.hasAlpha ):
+        if( self.hasAlpha and isinstance(self.train_x, numpy.ndarray )):
             ool = (1/self._mnegform.primary['rrlambda'])
             self.debug("OOL (lval):",ool)
             if( type(ool) != float and type(ool) != int):
                 self.warn("OOL not a float or int")
             if( not colmajor ):
-                self._mweights = ool*self._npdc.get(\
-                        side="data",batch="train").transpose().dot(\
+                self._mweights = ool*self.train_x.transpose().dot(\
                         self._mdistalpha)
             else:
-                self._mweights = ool*self._npdc.get(\
-                        side="data",batch="train").dot(\
+                self._mweights = ool*self.train_x.dot(\
                         self._mdistalpha)
             if( type(self._mweights) == numpy.ndarray ):
                 self.isTrained = True
@@ -156,6 +172,60 @@ class VanillaDonor(ConceptDonor):
                 self.isTrained = False
         else:
             self.isTrained = False
+
+    def preprocess(self, preprocdir):
+        operres = {}
+        with open( preprocdir ) as f:
+            d = json.load(f)
+        for p in d["mainlist"]:
+            for key,direct in p.items():
+                if(key== "__comment"):
+                    #ignore the comment
+                    continue
+                ores = []
+                mlist = None
+                if( key.startswith("__list__") ):
+                    #special list keyword
+                    # find the list name
+                    listname = key[ len("__list__"):]
+                    mlist = d.get(listname)
+                    if mlist is None:
+                        print("Error:",listname,"used in __list__ but not defined")
+                        exit(1)
+                    else:
+                        key = mlist
+                        print("Applying json based processing for Columns:",key)
+                elif( key=="*"):
+                    key=None
+                    print("Applying json based processing for all columns")
+                else:
+                    print("Applying json based processing for Columns:",key)
+                for dp in direct:
+                    print("Performing '{} {}'".format(
+                        dp.get("process"),
+                        dp.get("mets")))
+                    ores.append(
+                        self._npdc.preproc( dp.get("process"),
+                                    key, 
+                                    dp.get("mets"),
+                                    dp.get("arglist")
+                        )
+                    )
+                if key==None:
+                    operres["*"] = ores
+                elif mlist is not None:
+                    operres[listname] = ores
+                    del mlist
+                else:
+                    operres[key] = ores
+
+        #mc.fillempty_withvalue()
+        #mc.apply_mapper("LabelEncoder")
+        for k,v in operres.items():
+            self.verbose(k,v)
+
+    def display_internals(self):
+        self._npdc.head(5)
 
     # common functions
     def negotiate(self,ahostaddr):
@@ -175,47 +245,10 @@ class VanillaDonor(ConceptDonor):
             self._mnegform = NegForm( json.loads( smsg.recv( self._msocket ) ) )
             self.info("Synchronized form:")
             self._mnegform.display()
-            self.partition_internals( self._mnegform.primary["bsize"] )
-            self.kernel = self._npdc.computeKernel()
-            if not type(self.kernel) == numpy.ndarray:
-                self.warn("Kernel computational error!")
-            else:
-                self.verbose("Partitioned and computed the kernel",self.kernel.shape)
         except Exception as e:
             self.expt(str(e),traceback.format_exc())
         finally:
             return self.hasNegotiated()
-
-    ##############################################################################################
-    # These are common throughout almost all implementation and thus are implemented in the ABC
-    # updated: migrated from the conceptual class to this.
-    ##############################################################################################
-    def display_internals(self):
-        '''invokes a display command to display the internal content using any data controllers'''
-        if self._npdc is not None:
-            self._npdc.show()
-        if self._mnegform is not None:
-            self._mnegform.display()
-
-    def partition_internals(self, s_point):
-        '''invokes a partition command to perform splitting of the data set into the train/test'''
-        if self._npdc is not None:
-            self._npdc.batch(s_point)
-        else:
-            self.error("Failed to partition. NPDC is null!")
-
-    def normalize_internals(self):
-        '''perform normalization on the internal dataset, please call partition again'''
-        if self._npdc is not None:
-            self._npdc.stdnorm()
-        else:
-            self.error("Failed to normalize. NPDC is null!")
-
-    def sizeof_internals(self):
-        if self._npdc is not None:
-            return self._npdc.size()
-        else:
-            self.error("Failed to obtain sizes. NPDC is null!")
 
     def shutdown_connections(self):
         try:

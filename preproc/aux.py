@@ -3,6 +3,7 @@
 import csv, numpy
 
 import pyioneer.support.gpam as gpam
+from io import BytesIO
 pam = gpam.getgpam()
 # This function is used to decide on the batches
 def evaluate_bsize( esize, bfactor ):
@@ -34,7 +35,26 @@ def find_minesz( negformlist ):
     except Exception as e:
         pam.expt(str(e))
 
+def computeKernel( targetmat, colmaj=False):
+    '''computes the kernel of the data. returns a NUMPY ARRAY!'''
+    if(colmaj):
+        #col major ( XtX )
+        out = targetmat.transpose().dot(targetmat)
+    else:
+        #row major ( XXt )
+        out = targetmat.dot(targetmat.transpose())
+    return out
 
+def serialize(target):
+    '''serialize the numpy array to allow sending over sockets'''
+    with BytesIO() as b:
+        numpy.save(b, target)
+        serial = b.getvalue()
+    return serial
+
+def deserialize(target):
+    '''deserialize the data to recreate the numpy array'''
+    return numpy.load(BytesIO(target))
 
 # This function is used to read
 def read_csvfile(filename,compd=numpy.double,limiter=0,skips=0):

@@ -22,6 +22,9 @@ class NeoNPDController(Pam):
         # define the standard cat-num methods
         self.hlist = self.df.columns.values.tolist()
 
+    def getsize(self):
+        return self.df.shape
+
     def head(self,n=10):
         '''prints the first n'''
         self.verbose("Printing first {} rows".format(n))
@@ -56,14 +59,37 @@ class NeoNPDController(Pam):
         print(empval)
         return empval
 
-    def horizontal_split(self, n):
+    ############################################################################
+    # Used by pandframe.py rather than as a preprocessing script
+    ############################################################################
+    def obtrain(self,n, targetname=None ):
+        train,test = NeoNPDController.dframe_split(self.df, n )
+        if(targetname is not None):
+            train_y = train[targetname]
+            test_y = test[targetname]
+            train_x = train.drop( [targetname], axis = self._constant_axis_COLS )
+            test_x = test.drop( [targetname], axis = self._constant_axis_COLS )
+            return train_x.values,test_x.values, train_y.values,test_y.values
+        else:
+            return train.values, test.values
+        
+    def edtrain(self):
+        self.df.join( self.target )
+
+    @staticmethod
+    def horizontal_split(dframe, n):
         '''splits the internal array horizontally returning returning the 
         train and test dataframes'''
-        split = numpy.array_split( self.df, n )
-        return split
+        dsplit = numpy.split( dframe, [n], axis = NeoNPDController._constant_axis_ROWS )
+        return dsplit[1].values, dsplit[0].values
 
-    def normalize_all(self):
-        return self.preproc( "preproc" , self.hlist, "standardscaler", None)
+    @staticmethod
+    def dframe_split(dframe,n):
+        '''like horizontal split, except returns dframes intead of ndarrays'''
+        dsplit = numpy.split( dframe, [n], axis = NeoNPDController._constant_axis_ROWS )
+        return dsplit[1], dsplit[0]
+
+    ############################################################################
 
     def selectcolumn(self, cols, met, arglist):
         '''select a column or a set of columns to be rewritten,

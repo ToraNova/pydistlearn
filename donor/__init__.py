@@ -64,36 +64,6 @@ class ConceptDonor(Pam):
         '''please implement a weight recovery function. vanilla uses numpy'''
         pass
 
-    ##############################################################################################
-    # These are common throughout almost all implementation and thus are implemented in the ABC
-    ##############################################################################################
-    def display_internals(self):
-        '''invokes a display command to display the internal content using any data controllers'''
-        if self._npdc is not None:
-            self._npdc.show()
-        if self._mnegform is not None:
-            self._mnegform.display()
-
-    def partition_internals(self, s_point):
-        '''invokes a partition command to perform splitting of the data set into the train/test'''
-        if self._npdc is not None:
-            self._npdc.batch(s_point)
-        else:
-            self.error("Failed to partition. NPDC is null!")
-
-    def normalize_internals(self):
-        '''perform normalization on the internal dataset, please call partition again'''
-        if self._npdc is not None:
-            self._npdc.stdnorm()
-        else:
-            self.error("Failed to normalize. NPDC is null!")
-
-    def sizeof_internals(self):
-        if self._npdc is not None:
-            return self._npdc.size()
-        else:
-            self.error("Failed to obtain sizes. NPDC is null!")
-
     def hasNegotiated(self):
         '''check if the donor has negotiated. this is the first round of comm. that
         the donor and the central must undergo before training/testing phase'''

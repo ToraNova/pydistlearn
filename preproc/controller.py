@@ -51,18 +51,6 @@ class NPDController(HomoCSVController):
                 self.expt(str(e))
                 super().unload( dname )
 
-    @staticmethod
-    def serialize(target):
-        '''serialize the numpy array to allow sending over sockets'''
-        with BytesIO() as b:
-            numpy.save(b, target)
-            serial = b.getvalue()
-        return serial
-
-    @staticmethod
-    def deserialize(target):
-        '''deserialize the data to recreate the numpy array'''
-        return numpy.load(BytesIO(target))
 
     def size(self, dname = _default_readkey):
         '''obtains the size of dname and it's batched data, returns a dictionary of sizes'''
