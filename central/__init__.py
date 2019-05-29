@@ -20,6 +20,8 @@ class ConceptCentral(Pam):
     _mdmltlist = []
     _npdc = None # This should be a data controller
 
+    donorTrained = False
+
     def __init__(self,verbose=False,debug=False):
         super().__init__(verbose=verbose,debug=debug)
 
@@ -60,4 +62,5 @@ class ConceptCentral(Pam):
         '''check if the donor has negotiated. this is the first round of comm. that
         the donor and the central must undergo before training/testing phase'''
         return len(self._mnegformlist) > 0 and len(self._mdmlconnlist) > 0
+
 

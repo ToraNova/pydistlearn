@@ -25,19 +25,20 @@ class NegForm:
         '''initializes the Negform for the ConceptDonor
         itself, this allows sending of params to the
         central'''
+        pam = gpam.getgpam()
         if(constr_param == None):
             # this is the central
-            gpam.debug("Negform -- central constructor")
+            pam.debug("Negform -- central constructor")
             pass
 
         elif( type(constr_param) == dict ):
             # copy constructor
-            gpam.debug("Negform -- copy constructor",constr_param)
+            pam.debug("Negform -- copy constructor",constr_param)
             self.primary = constr_param
 
         else:
             # initializes the negform
-            gpam.debug("Negform -- donor constructor")
+            pam.debug("Negform -- donor constructor")
             sz = constr_param.sizeof_internals()
             self.primary['esize'] = sz.get('data')[0]
             self.primary['fsize'] = sz.get('data')[1]

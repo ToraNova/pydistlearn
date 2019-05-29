@@ -23,6 +23,7 @@ class ConceptDonor(Pam):
 
     hasTarget = False
     hasAlpha = False
+    isTrained = False
     kernel = None
 
     def __init__(self,verbose=False,debug=False,owarn=False):
@@ -68,37 +69,32 @@ class ConceptDonor(Pam):
     ##############################################################################################
     def display_internals(self):
         '''invokes a display command to display the internal content using any data controllers'''
-        if self._npdc != None:
+        if self._npdc is not None:
             self._npdc.show()
-        if self._mnegform != None:
+        if self._mnegform is not None:
             self._mnegform.display()
 
     def partition_internals(self, s_point):
         '''invokes a partition command to perform splitting of the data set into the train/test'''
-        if self._npdc != None:
+        if self._npdc is not None:
             self._npdc.batch(s_point)
         else:
             self.error("Failed to partition. NPDC is null!")
 
     def normalize_internals(self):
         '''perform normalization on the internal dataset, please call partition again'''
-        if self._npdc != None:
+        if self._npdc is not None:
             self._npdc.stdnorm()
         else:
             self.error("Failed to normalize. NPDC is null!")
 
     def sizeof_internals(self):
-        if self._npdc != None:
+        if self._npdc is not None:
             return self._npdc.size()
         else:
             self.error("Failed to obtain sizes. NPDC is null!")
 
-    def isTrained(self):
-        '''check if the donor is trained properly. (donor must negotatie before training)'''
-        return self._npdc != None and self._npdc.isLoaded( self._npdc_distkey )
-
-
     def hasNegotiated(self):
         '''check if the donor has negotiated. this is the first round of comm. that
         the donor and the central must undergo before training/testing phase'''
-        return (self._mnegform.isfilled()) and (type(self.kernel) != None)
+        return (self._mnegform.isfilled()) and (type(self.kernel) is not None)

@@ -2,12 +2,12 @@
 # to reduce code sizes on the central/donor class
 # definition and improve maintainability
 
-from pyioneer.variable import HomoCSVDataController
+from pyioneer.variable.control import HomoCSVController
 from sklearn import preprocessing
 import numpy
 from . import dist_matrix as dm
 
-class NPDController(HomoCSVDataController):
+class NPDController(HomoCSVController):
     '''inhertis from the HomoCSVDataController class. deals with homogeneous data (naive)'''
     _compd = numpy.double
     _default_readkey = "__mm"
@@ -30,7 +30,9 @@ class NPDController(HomoCSVDataController):
         '''overrides the read from the base class, allows partitioning
         and ensures final results are numpy arrays'''
         self.debug("Reading file",filename)
-        super().read(filename,htype,dname,skipc,adelimiter,aquotechar)
+        super().read(filename,dname,skipc,adelimiter,aquotechar)
+        self.verbose("Read status:",self.isRead(dname))
+        super().typecast(htype,dname) #cast the var type
         self.hasTarget = hasTarget
         # converts to python obj
         if( self.isRead(dname) ):

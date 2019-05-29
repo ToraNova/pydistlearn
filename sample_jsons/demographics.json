@@ -1,0 +1,20 @@
+{
+	"mainlist":[
+		{
+			"*": [
+				{ 	
+				"process":"fill",
+				"mets":"mode",
+				"arglist":[]
+				},
+				{ 
+				"process":"preproc",
+				"mets":"labelencoder",
+				"arglist":[]
+				}
+			],
+			"__comment":["fills all columns' empty field with the mode of that column",
+			"and performs preprocessing (label encoder) on all of the columns"]
+		}
+	]
+}

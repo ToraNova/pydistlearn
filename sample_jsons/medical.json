@@ -1,0 +1,63 @@
+{
+
+	"mainlist":[
+		{
+			"__list__ignorelist":[
+				{ 	
+				"process":"ignore",
+				"mets":"",
+				"arglist":[]
+				}
+			]
+
+		},
+		{
+			"__list__zerolist":[
+				{ 
+				"process":"fill",
+				"mets":"value",
+				"arglist":[0.0]
+				}
+			]
+		},
+		{
+			"__list__modelist":[
+				{ 
+				"process":"fill",
+				"mets":"mode",
+				"arglist":[]
+				}
+			]
+		},
+		{
+			"__list__labellist":[
+				{ 
+				"process":"preproc",
+				"mets":"labelencoder",
+				"arglist":[]
+				}
+			]
+		}
+	],
+
+	"ignorelist":[
+		"Health Service Area","Operating Certificate Number","Facility Id","Discharge Year",
+		"CCS Diagnosis Description","CCS Procedure Description","APR DRG Description",
+		"APR MDC Description","APR Severity of Illness Description","Abortion Edit Indicator",
+		"Other Provider License Number","Attending Provider License Number","Operating Provider License Number",
+		"Total Charges"
+	],
+	"labellist":[
+		"Hospital County","Facility Name","Admit Day of Week",
+		"Type of Admission","Patient Disposition",
+		"Discharge Day of Week","APR Risk of Mortality","APR Medical Surgical Description",
+		"Emergency Department Indicator"
+	],
+
+	"modelist":[
+		"APR Risk of Mortality","Hospital County"
+	],
+
+	"zerolist":[
+	]
+}

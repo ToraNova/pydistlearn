@@ -3,11 +3,12 @@
 import csv, numpy
 
 import pyioneer.support.gpam as gpam
+pam = gpam.getgpam()
 # This function is used to decide on the batches
 def evaluate_bsize( esize, bfactor ):
     if(bfactor > esize):
         # bad user again
-        gpam.warn("Bad user. bfactor > esize!")
+        pam.warn("Bad user. bfactor > esize!")
         return int( esize )
     if(bfactor > 1):
         # this uses bfactor as a literal numeric
@@ -17,7 +18,7 @@ def evaluate_bsize( esize, bfactor ):
         return int( esize * bfactor )
     else:
         # this means the user has made a mistake.
-        gpam.warn("Bad user. bfactor < 0")
+        pam.warn("Bad user. bfactor < 0")
         return int(-bfactor)
 
 def find_minesz( negformlist ):
@@ -28,10 +29,10 @@ def find_minesz( negformlist ):
         for f in negformlist:
             if( f.primary.get('esize') < mincand ):
                 mincand = f.primary.get('esize')
-        gpam.debug("minimum candidate is",mincand)
+        pam.debug("minimum candidate is",mincand)
         return mincand
     except Exception as e:
-        gpam.expt(str(e))
+        pam.expt(str(e))
 
 
 

@@ -19,10 +19,9 @@ if __name__ == "__main__":
     mp.add_argument("-t","--hasTarget",action='store_true',default=False,help="Specify if the client has targets or not")
     args = mp.parse_args() #preliminary parsing to see if it is client or not
 
-    gpam.disable() #disable some verboses
-
     #client 
-    donor = VanillaDonor( args.datafile, args.hasTarget , float, debug=True, verbose=True,owarn=True)
+    donor = VanillaDonor( args.datafile, args.hasTarget , float, skipc=1 , adelimiter=',',
+            debug=True, verbose=True,owarn=True)
     donor.normalize_internals()
     donor.display_internals()
     donor.negotiate( (args.hostname, args.port) )
@@ -33,4 +32,5 @@ if __name__ == "__main__":
 
     donor.shutdown_connections()
 
+    exit(0)
 

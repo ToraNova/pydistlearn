@@ -1,0 +1,25 @@
+{
+
+	"mainlist":[
+		{
+			"Age Group":[
+				{ 	
+				"process":"select",
+				"mets":"",
+				"arglist":[]
+				},
+				{
+				"process":"fill",
+				"mets":"mode",
+				"arglist":[]
+				},
+				{
+				"process":"preproc",
+				"mets":"onehotencoder",
+				"arglist":[]
+				}
+			]
+		}
+
+	]
+}

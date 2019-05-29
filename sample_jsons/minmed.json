@@ -1,0 +1,84 @@
+{
+
+	"mainlist":[
+		{
+			"__list__selectlist":[
+				{ 	
+				"process":"select",
+				"mets":"",
+				"arglist":[]
+				}
+			]
+
+		},
+		{
+			"__list__meanlist":[
+				{ 
+				"process":"fill",
+				"mets":"mean",
+				"arglist":[]
+				}
+			]
+		},
+		{
+			"__list__modelist":[
+				{ 
+				"process":"fill",
+				"mets":"mode",
+				"arglist":[]
+				}
+			]
+		},
+		{
+			"__list__labellist":[
+				{ 
+				"process":"preproc",
+				"mets":"onehotencoder",
+				"arglist":[]
+				}
+			]
+		},
+		{
+			"__list__scaler":[
+				{ 
+				"process":"preproc",
+				"mets":"standardscaler",
+				"arglist":[]
+				}
+			]
+		},
+		{
+			"Total Costs":[
+				{
+				"process":"moveback",
+				"mets":"",
+				"arglist":[]
+				}
+			]
+		}
+
+	],
+
+	"selectlist":[
+		"Hospital County","Length of Stay",
+		"Total Charges","Total Costs"
+	],
+
+	"labellist":[
+		"Hospital County"
+	],
+
+	"modelist":[
+		"Hospital County"
+	],
+
+	"meanlist":[
+		"Length of Stay","Total Charges","Total Costs"
+	],
+
+	"scaler":[
+		"Length of Stay","Total Charges","Total Costs"
+	]
+
+	
+}

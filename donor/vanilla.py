@@ -33,7 +33,7 @@ class VanillaDonor(ConceptDonor):
         up and will read based on what the donor is created as (hasTarget or no?)'''
         self._npdc = controller.NPDController(verbose,debug,owarn) 
         self.hasTarget = ahasTarget
-        self._npdc.read( filename, ahasTarget, htype, skipc = skipc, adelimiter = adelimiter,
+        self._npdc.read( filename, ahasTarget,htype, skipc = skipc, adelimiter = adelimiter,
                 aquotechar = aquotechar)
 
     # required implementations (the constructor must read in to fill up _mDmat, and
@@ -45,7 +45,9 @@ class VanillaDonor(ConceptDonor):
         from server and fill in the received alpha to _mdist_alpha'''
         if( self.hasNegotiated() ):
             self.verbose("Sending kernel to central")
-            smsg.send( self._msocket, json.dumps( self.kernel.tolist() ) ) #json dump and send the array
+            dumped = json.dumps( self.kernel.tolist() ) # THIS line is crashing the system (for size 10k)
+            self.verbose("Total json dump: {} bytes".format(len(dumped)))
+            smsg.send( self._msocket, dumped ) #json dump and send the array
             # await confirmation
             repmsg = self._msocket.recv(4)
             if( repmsg.decode('utf-8') == "ACKN" ):
@@ -88,7 +90,7 @@ class VanillaDonor(ConceptDonor):
         if( self.isTrained ):
             aggregate = self._npdc.get( side="data",batch="test").dot( self._mweights )
             self.verbose("Sending test prediction to central",aggregate.shape)
-            self.raw( aggregate )
+            #self.raw( aggregate )
             smsg.send( self._msocket, json.dumps( aggregate.tolist() ) )
             repmsg = self._msocket.recv(4)
             if( repmsg.decode('utf-8') == "ACKN" ):

@@ -13,6 +13,8 @@ Runs on PyPLASMA, a Python wrapped PLASMA library for linear regression
 * pyioneer (custom library)
 * CMAKE 3.14.x
 * numpy
+* pandas
+* sklearn
 
 ### Math Kernel Library
 
@@ -29,6 +31,8 @@ Install pre-requisites
 	apt-get install libopenblas-dev liblapacke-dev liblapack-dev
 	apt-get install python3-pip
 	pip3 install numpy
+	pip3 install sklearn
+	pip3 install sklearn-pandas
 
 Compile the custom library prodtools and pyioneer
 

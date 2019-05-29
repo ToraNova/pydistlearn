@@ -76,11 +76,13 @@ class VanillaCentral(ConceptCentral):
                         self._mdmltlist.append( rt )
 
             if( len(self._mdmlklist) < 1 or len(self._mdmltlist) < 1 ):
-                self.error("No kernels or Targets received.")
+                self.error("No kernels received")
                 out = False
-                for i in range(self._hostnum):
-                    conn = self._mdmlconnlist[i]
-                    smsg.send( conn, "ABRT") #send the abort message to all host
+                self.__abortAll()
+            elif( len(self._mdmltlist) < 1):
+                self.error("No Targets. Please check if target donor is specified correctly")
+                out = False
+                self.__abortAll()
             else:
                 # all kernels and targets received
                 # sum all kernels
@@ -103,7 +105,7 @@ class VanillaCentral(ConceptCentral):
                     conn = self._mdmlconnlist[i]
                     smsg.send( conn, json.dumps( alpha.tolist() ) ) #json dump and send the array
                 self.info("DML training complete")
-                
+        self.donorTrained = out
         return out
 
     def dmltest(self):
@@ -114,7 +116,7 @@ class VanillaCentral(ConceptCentral):
         self._mdmlalist = []
         self._mdmlvlist = []
         out = True
-        if( self.hasNegotiated() ):
+        if( self.hasNegotiated() and self.donorTrained ):
             self.verbose("Hosting DML test")
             for i in range( self._hostnum ):
                 conn = self._mdmlconnlist[i]
@@ -136,12 +138,14 @@ class VanillaCentral(ConceptCentral):
                         self._mdmlvlist.append( rt )
                         self.verbose("received test targets from donor",i)
 
-            if( len(self._mdmlalist) < 1 or len(self._mdmlvlist) < 1):
-                self.error("No kernels or Targets received.")
+            if( len(self._mdmlalist) < 1):
+                self.error("No kernels received, Aborting")
                 out = False #Error occurred
-                for i in range(self._hostnum):
-                    conn = self._mdmlconnlist[i]
-                    smsg.send( conn, "ABRT") #send the abort message to all host
+                self.__abortAll()
+            if( len(self._mdmlvlist) < 1):
+                self.error("No verifying targets. Is target donor specified correctly?")
+                out = False
+                self.__abortAll()
             else:
                 asum = numpy.zeros( self._mdmlalist[0].shape, dtype = self.compd)
                 for i,a in enumerate(self._mdmlalist):
@@ -162,7 +166,7 @@ class VanillaCentral(ConceptCentral):
                     smsg.send( conn, json.dumps( jrep ) )
                 self.verbose("DML done. JREP pushed to donors")
         else:
-            self.error("Not negotiated yet, unable to test")
+            self.error("Not negotiated or donor is not trained yet, unable to test")
             out = False
         return out
 
@@ -211,6 +215,11 @@ class VanillaCentral(ConceptCentral):
             self.expt(str(e),traceback.format_exc())
         finally:
             return self.hasNegotiated()
+
+    def __abortAll(self):
+        for i in range(self._hostnum):
+            conn = self._mdmlconnlist[i]
+            smsg.send( conn, "ABRT") #send the abort message to all host
 
     def shutdown_connections(self):
         for c in self._mdmlconnlist:
