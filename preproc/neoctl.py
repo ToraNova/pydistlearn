@@ -17,7 +17,7 @@ class NeoNPDController(Pam):
     def __init__(self, filename, index_col=0, adelimiter=',',verbose=False,debug=False):
         super().__init__(verbose=verbose,debug=debug)
         self.df = pandas.read_csv( filename, index_col=index_col , delimiter=adelimiter )
-        self.bu = self.df #backup copy
+        self.bu = self.df #backup copy (used for weights recovery)
         self.fname = filename
         # define the standard cat-num methods
         self.hlist = self.df.columns.values.tolist()

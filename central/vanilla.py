@@ -14,7 +14,10 @@ import hashlib
 
 # sklearn
 from sklearn import preprocessing
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score,\
+                            mean_absolute_error, max_error,\
+                            explained_variance_score
+
 
 # local
 from preproc.aux import serialize, deserialize
@@ -150,7 +153,7 @@ class VanillaCentral(ConceptCentral):
                         self.verbose("received test targets from donor",i)
 
             if( len(self._mdmlalist) < 1):
-                self.error("No kernels received, Aborting")
+                self.error("No aggregates received, Aborting")
                 out = False #Error occurred
                 self.__abortAll()
             if( len(self._mdmlvlist) < 1):
@@ -168,9 +171,15 @@ class VanillaCentral(ConceptCentral):
                 varg = self._mdmlvlist[0]
                 jrep = {
                         "mse": mean_squared_error( asum, varg),
+                        "mae": mean_absolute_error( asum, varg),
+                        "max": max_error( asum, varg),
+                        "evs": explained_variance_score( asum, varg),
                         "r2s": r2_score( asum, varg)
                         }
                 self.verbose("mse",jrep.get("mse"))
+                self.verbose("mae",jrep.get("mae"))
+                self.verbose("max",jrep.get("max"))
+                self.verbose("evs",jrep.get("evs"))
                 self.verbose("r2s",jrep.get("r2s"))
 
                 for i in range(self._hostnum):
@@ -183,50 +192,97 @@ class VanillaCentral(ConceptCentral):
         return out
 
     def dmlpred(self):
-        #TODO: figure out how to implement this
-        pass
+        self._mdmlalist = []
+        out = True
+        self.verbose("Hosting DML test")
+        for i in range( self._hostnum ):
+            conn = self._mdmlconnlist[i]
+            rcv = smsg.recv( conn )
+            if( rcv == None ):
+                self.error("aggregate rcv has failed from donor",i)
+                out = False #Error occurred
+            else:
+                ra = deserialize( rcv )
+                #ra = numpy.array( json.loads(rcv))
+                self._mdmlalist.append( ra )
+            conn.send('ACKN'.encode('utf-8'))
 
-    def host_negotiations(self,asrvaddr, batchfactor=0.1, rrlambda=1.0):
+        if( len(self._mdmlalist) < 1):
+            self.error("No aggregates received, Aborting")
+            out = False #Error occurred
+            self.__abortAll()
+        else:
+            asum = numpy.zeros( self._mdmlalist[0].shape, dtype = self.compd)
+            for i,a in enumerate(self._mdmlalist):
+                self.info("aggregate",i,a.shape)
+                asum = a + asum
+
+            # only test against the first TODO: selectable testing
+            for i in range( self._hostnum ):
+                conn = self._mdmlconnlist[i]
+                dumped = serialize(asum)
+                smsg.send( conn, dumped )
+            self.verbose("DML done. ASUM pushed to donors")
+        return out
+
+    def host_negotiations(self,asrvaddr, batchfactor=0.1, rrlambda=1.0,train=True):
         '''begins negotiations by listening on ahostaddr. receives the negform and syncs
         them up with the donors
         @params ahostaddr - a tuple ('localhost',portnumber i.e 8000)
         @params batchfactor - the value to batch up the train/test set
         @params rrlamdda - the ridge regressor's hyperparam'''
         # the host are indexed based on the order in which they connect
-        self._mnegformlist = []
         self._mdmlconnlist = []
-        try:
-            self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.sock.bind( asrvaddr )
-            self.sock.listen( self._hostnum )
-            # Negotiations round 1
-            for i in range( self._hostnum ):
-                self.debug("Listening on address:",asrvaddr)
-                connection, rcliaddr = self.sock.accept()
-                self.debug("Connection established with",rcliaddr)
-                # receives the json obj
-                negf = NegForm( json.loads( smsg.recv( connection ) ) )
-                negf.display()
-                self._mnegformlist.append( negf )
-                self._mdmlconnlist.append( connection )
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if(train):
+            # TRAINING MODE
+            self.verbose("Negotiation for DML TRAIN")
+            self._mnegformlist = []
+            try:
+                self.sock.bind( asrvaddr )
+                self.sock.listen( self._hostnum )
+                # Negotiations round 1
+                for i in range( self._hostnum ):
+                    self.debug("Listening on address:",asrvaddr)
+                    connection, rcliaddr = self.sock.accept()
+                    self.debug("Connection established with",rcliaddr)
+                    # receives the json obj
+                    negf = NegForm( json.loads( smsg.recv( connection ) ) )
+                    negf.display()
+                    self._mnegformlist.append( negf )
+                    self._mdmlconnlist.append( connection )
 
-            # Process to formulate the batchsizes
-            bsize = aux.evaluate_bsize(
-                    aux.find_minesz( self._mnegformlist ), batchfactor)
-            self.info("bsize decided on",bsize)
+                # Process to formulate the batchsizes
+                bsize = aux.evaluate_bsize(
+                        aux.find_minesz( self._mnegformlist ), batchfactor)
+                self.info("bsize decided on",bsize)
 
-            # Negotiations round 2
-            for i in range( self._hostnum ):
-                self._mnegformlist[i].primary['bsize'] = bsize
-                self._mnegformlist[i].primary['rrlambda'] = rrlambda
-                smsg.send( self._mdmlconnlist[i],
-                        json.dumps( self._mnegformlist[i].primary ))
-                self.debug("Negotiation forms pushed back to host",i)
-
-        except Exception as e:
-            self.expt(str(e),traceback.format_exc())
-        finally:
-            return self.hasNegotiated()
+                # Negotiations round 2
+                for i in range( self._hostnum ):
+                    self._mnegformlist[i].primary['bsize'] = bsize
+                    self._mnegformlist[i].primary['rrlambda'] = rrlambda
+                    smsg.send( self._mdmlconnlist[i],
+                            json.dumps( self._mnegformlist[i].primary ))
+                    self.debug("Negotiation forms pushed back to host",i)
+            except Exception as e:
+                self.expt(str(e),traceback.format_exc())
+            finally:
+                return self.hasNegotiated()
+        else:
+            # PREDICTION MODE
+            self.verbose("Negotiation for DML PRED")
+            try:
+                self.sock.bind( asrvaddr )
+                self.sock.listen( self._hostnum )
+                for i in range( self._hostnum ):
+                    self.debug("Listening on address:",asrvaddr)
+                    connection, rcliaddr = self.sock.accept()
+                    self.debug("Connection established with",rcliaddr)
+                    self._mdmlconnlist.append( connection )
+                return True
+            except Exception as e:
+                self.expt(str(e),traceback.format_exc())
+                return False
 
     def __abortAll(self):
         for i in range(self._hostnum):

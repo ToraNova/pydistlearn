@@ -37,22 +37,12 @@
 				"arglist":[]
 				}
 			]
-		},
-		{
-			"Total Costs":[
-				{
-				"process":"moveback",
-				"mets":"",
-				"arglist":[]
-				}
-			]
 		}
 
 	],
 
 	"selectlist":[
-		"Hospital County","Length of Stay",
-		"Total Costs"
+		"Hospital County","Length of Stay"
 	],
 
 	"labellist":[
@@ -64,11 +54,11 @@
 	],
 
 	"meanlist":[
-		"Length of Stay","Total Costs"
+		"Length of Stay"
 	],
 
 	"scaler":[
-		"Length of Stay","Total Costs"
+		"Length of Stay"
 	]
 
 	
