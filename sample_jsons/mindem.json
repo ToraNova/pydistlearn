@@ -28,6 +28,9 @@
 	],
 	"test2":[
 		"Age Group"
+	],
+	"test3":[
+		"Insurance Type"
 	]
 
 }

@@ -1,15 +1,15 @@
 Features,Weights
-Age Group_0 to 17,-2231.0019089468988
-Age Group_18 to 29,-561.6671397561367
-Age Group_30 to 49,273.9958944299724
-Age Group_50 to 69,2126.8306817310513
-Age Group_70 or Older,394.34053261968074
-Insurance Type_Blue Cross/Blue Shield,-57.95416732665035
-Insurance Type_Department of Corrections,-1798.558216475496
-Insurance Type_Federal/State/Local/VA,-829.5022641274791
-Insurance Type_Managed Care  Unspecified,-26.975668159463794
-Insurance Type_Medicaid,-243.49655784396873
-Insurance Type_Medicare,-239.897670988561
-Insurance Type_Miscellaneous/Other,3555.9244795296017
-Insurance Type_Private Health Insurance,554.3835251264172
-Insurance Type_Self-Pay,-911.4253996568368
+Age Group_0 to 17,1.0346242513878892
+Age Group_18 to 29,0.4557906994950187
+Age Group_30 to 49,0.0894192741498614
+Age Group_50 to 69,0.4312301664195104
+Age Group_70 or Older,1.0665305724605219
+Insurance Type_Blue Cross/Blue Shield,0.6261658893712507
+Insurance Type_Department of Corrections,0.3642016097695002
+Insurance Type_Federal/State/Local/VA,0.4157527110247118
+Insurance Type_Managed Care  Unspecified,0.5523841174967196
+Insurance Type_Medicaid,0.6018139540061895
+Insurance Type_Medicare,0.48926957295304874
+Insurance Type_Miscellaneous/Other,-0.7372822051258439
+Insurance Type_Private Health Insurance,0.4235726745542836
+Insurance Type_Self-Pay,0.3417166398627973

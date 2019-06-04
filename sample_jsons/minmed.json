@@ -37,17 +37,7 @@
 				"arglist":[]
 				}
 			]
-		},
-		{
-			"Total Costs":[
-				{
-				"process":"moveback",
-				"mets":"",
-				"arglist":[]
-				}
-			]
 		}
-
 	],
 
 	"selectlist":[
@@ -65,11 +55,5 @@
 
 	"meanlist":[
 		"Length of Stay","Total Costs"
-	],
-
-	"scaler":[
-		"Length of Stay","Total Costs"
 	]
-
-	
 }

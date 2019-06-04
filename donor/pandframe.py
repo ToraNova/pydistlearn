@@ -185,8 +185,9 @@ class PandFrameDonor(ConceptDonor):
         '''saves the weight as a json format file'''
         if(self.isTrained):
             tlist = self._npdc.hlist # make copy
-            if( self.targetname is not None ):
-                del tlist[ self._npdc.hlist.index( self.targetname ) ] #delete target
+            #print(tlist)
+            #if( self.targetname is not None ):
+            #    del tlist[ self._npdc.hlist.index( self.targetname ) ] #delete target
             wdat = pandas.DataFrame( self._mweights, index = tlist, columns=["Weights"])
             wdat.to_csv( wfilename, index=True,index_label="Features")
 
@@ -239,7 +240,10 @@ class PandFrameDonor(ConceptDonor):
                 self.isTrained = True
                 self.debug("Weights recovered successfully",self._mweights.shape)
                 self.debug("Weights array:")
-                for h,w in zip( self._npdc.hlist, self._mweights):
+                tlist = self._npdc.hlist # make copy
+                if( self.targetname is not None ):
+                    del tlist[ self._npdc.hlist.index( self.targetname ) ] #delete target
+                for h,w in zip( tlist, self._mweights):
                     self.raw( h, w )
             else:
                 self.isTrained = False

@@ -1,0 +1,38 @@
+{
+
+	"mainlist":[
+		{
+			"__list__selectlist":[
+				{ 	
+				"process":"select",
+				"mets":"",
+				"arglist":[]
+				}
+			]
+
+		},
+		{
+			"__list__meanlist":[
+				{ 
+				"process":"fill",
+				"mets":"mean",
+				"arglist":[]
+				}
+			]
+		}
+	],
+
+	"selectlist":[
+		"Length of Stay","Difference","Total Costs"
+	],
+
+	"labellist":[
+	],
+
+	"modelist":[
+	],
+
+	"meanlist":[
+		"Length of Stay","Difference","Total Costs"
+	]
+}
